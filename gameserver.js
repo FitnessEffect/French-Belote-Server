@@ -10,7 +10,6 @@ var team2 = 0;
 var passedCount = 0;
 var card;
 var roomId;
-var winnerTeamMate;
 
 //typical express port
 const PORT = 8080;
@@ -105,6 +104,8 @@ io.sockets.on("connection", function(socket) {
 
     socket.on("nudge", function(data){
       //io.to(roomId).emit("nudge", data);
+      let tempNum = rooms[rooms.length-1].getNumFromId(data.uid);
+      data.num = tempNum;
       socket.broadcast.emit("nudge", data);
     });
 
@@ -207,9 +208,11 @@ io.sockets.on("connection", function(socket) {
       if (rooms[rooms.length-1].getCardOnTable().length == rooms[rooms.length-1].players.length){
       //find round winner
         var winnerPlayer = rooms[rooms.length-1].compareCards();
-        rooms[rooms.length-1].getTeamMate(winnerPlayer, function(player){
-          winnerTeamMate = player;
-        });
+        // rooms[rooms.length-1].getTeamMate(winnerPlayer, function(player){
+        //   winnerTeamMate = player;
+        // });
+        var winnerTeamMate = rooms[rooms.length-1].getTeamMate(winnerPlayer);
+
       //calculate team points for round
         var roundPoints = rooms[rooms.length-1].updateScore(winnerPlayer);
 
