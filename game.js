@@ -49,6 +49,8 @@ class Game {
     }
 
 
+
+
    showOneCard(callback){
      var context = this;
      for (var i = 0; i < 52; i++) {

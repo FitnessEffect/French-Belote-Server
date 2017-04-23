@@ -55,41 +55,49 @@ class Room{
     }
   }
 
+  getNumFromId(pId){
+    for (var i = 0; i < this.players.length; i++){
+      if (this.players[i].id == pId){
+        return this.players[i].playerNumber;
+      }
+    }
+  }
+
   getTeamMate(winnerPlayer, callback){
     if (this.players.length == 4){
       if (winnerPlayer.playerNumber == 1){
         //return player 3
-        callback(this.players[2]);
+        return(this.players[2]);
       }else if (winnerPlayer.playerNumber == 2){
         //return player 4
-        callback(this.players[3]);
+        return(this.players[3]);
       }else if (winnerPlayer.playerNumber == 3){
         //return player 1
-        callback(this.players[0]);
+        return(this.players[0]);
       }else if (winnerPlayer.playerNumber == 4){
         //return player 2
-        callback(this.players[1]);
+        return(this.players[1]);
       }
   }
   if (this.players.length == 3){
     if (winnerPlayer.playerNumber == 1){
       //return player 3
-      callback(this.players[2]);
+      return(this.players[2]);
     }else if (winnerPlayer.playerNumber == 2){
       //return self
-      callback(this.players[1]);
+      return(this.players[1]);
     }else if (winnerPlayer.playerNumber == 3){
       //return player 1
-      callback(this.players[0]);
+      return(this.players[0]);
     }
   }
   if (this.players.length == 2){
     if (winnerPlayer.playerNumber == 1){
       //return self
-      callback(this.players[0]);
+      return(this.players[0]);
     }else if (winnerPlayer.playerNumber == 2){
       //return self
-      callback(this.players[1]);
+      return(this.players[1]);
     }
   }
   }
