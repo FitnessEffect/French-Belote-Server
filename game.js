@@ -2,6 +2,7 @@ var Player = require("./player");
 var shuffle = require("shuffle");
 var Card = require("./Card");
 var atout = "";
+var startingPlayer = "";
 
 class Game {
 
