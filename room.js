@@ -63,6 +63,14 @@ class Room{
     }
   }
 
+  saveStartingPlayer(id){
+    this.game.startingPlayer = id;
+  }
+
+  getStartingPlayerId(){
+    return this.game.startingPlayer;
+  }
+
   getTeamMate(winnerPlayer, callback){
     if (this.players.length == 4){
       if (winnerPlayer.playerNumber == 1){

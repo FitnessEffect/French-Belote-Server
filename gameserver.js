@@ -111,6 +111,7 @@ io.sockets.on("connection", function(socket) {
 
     socket.on("startGame", function(data) {
         rooms[rooms.length-1].resetGame();
+        rooms[rooms.length-1].saveStartingPlayer(data.uid);
         io.to(roomId).emit("clearAtout");
         rooms[rooms.length-1].dealCards(function(players){
           tempPlayers = players;
@@ -177,7 +178,7 @@ io.sockets.on("connection", function(socket) {
             });
             //io.to(roomId).broadcast.emit("cardsDealt", tempPlayers);
             io.to(roomId).emit("cardsDealt", tempPlayers);
-            io.to(roomId).emit("waitingPlayers", data.id);
+            io.to(roomId).emit("waitingPlayers", rooms[rooms.length-1].getStartingPlayerId());
         }
     });
 
