@@ -4,6 +4,9 @@ var wageC;
 var tempScore;
 var team1 = 0;
 var team2 = 0;
+var roundTeam1 = 0;
+var roundTeam2 = 0;
+var roundWinners = [];
 
 class Room{
   constructor(id){
@@ -40,7 +43,6 @@ class Room{
   }
 
   updateScore(player){
-
    tempScore = this.game.updateScore(player);
     if ((player.playerNumber == 1) || (player.playerNumber == 3)) {
         team1 = team1 + tempScore;
@@ -52,6 +54,28 @@ class Room{
       //  this.players[1].points = team2;
       //  this.players[3].points = team2;
         return team2;
+    }
+  }
+
+  updateRoundScore(player){
+     if (team1 > team2){
+         roundTeam1 = roundTeam1 + 1;
+         return roundTeam1;
+     } else {
+         roundTeam2 = roundTeam2 + 1;
+         return roundTeam2;
+     }
+  }
+
+  getWinnerRoundScore(player){
+    if (team1 > team2) {
+      roundWinners.push(this.players[0]);
+      return roundWinners
+    } else {
+      if (this.players.length > 1){
+        roundWinners.push(this.players[1]);
+        return roundWinners
+      }
     }
   }
 

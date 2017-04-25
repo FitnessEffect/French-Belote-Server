@@ -209,19 +209,35 @@ io.sockets.on("connection", function(socket) {
       if (rooms[rooms.length-1].getCardOnTable().length == rooms[rooms.length-1].players.length){
       //find round winner
         var winnerPlayer = rooms[rooms.length-1].compareCards();
-        // rooms[rooms.length-1].getTeamMate(winnerPlayer, function(player){
-        //   winnerTeamMate = player;
-        // });
         var winnerTeamMate = rooms[rooms.length-1].getTeamMate(winnerPlayer);
 
       //calculate team points for round
         var roundPoints = rooms[rooms.length-1].updateScore(winnerPlayer);
+
+
+        console.log("ROUND COUNT FOR WINNER AFTER UPDATE");
+        console.log(roundCount);
 
         io.to(roomId).emit("roundResult", {
             "winnerID": winnerPlayer.id,
             "score": roundPoints,
             "teamMateID": winnerTeamMate.id
         });
+
+        var roundCount = 0;
+        var winnerReference = "";
+
+        if (data.lastCard == 1){
+          roundCount = rooms[rooms.length-1].updateRoundScore(winnerPlayer);
+          winnerReference = rooms[rooms.length-1].getWinnerRoundScore(winnerPlayer);
+
+          io.to(roomId).emit("roundCountUpdate", {
+            "roundCount": roundCount,
+            "winnerReference": winnerReference
+          });
+        }
+
+
         rooms[rooms.length-1].clearCardOnTable();
         io.to(roomId).emit("clearBoard");
         io.to(roomId).emit("waitingPlayers", winnerPlayer.id );
