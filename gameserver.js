@@ -9,7 +9,7 @@ var team1 = 0;
 var team2 = 0;
 var passedCount = 0;
 var card;
-var roomId;
+//var roomId;
 
 //typical express port
 const PORT = 8080;
@@ -74,7 +74,8 @@ io.sockets.on("connection", function(socket) {
     if (!rooms){
         var room = new Room("room1");
         rooms = [room];
-        roomId = "room1";
+        //roomId = "room1";
+        room.id = "room1";
     }else{
       //skip
     }
@@ -86,7 +87,7 @@ io.sockets.on("connection", function(socket) {
       console.log(data);
       //select correct room
       rooms[rooms.length-1].addNewPlayer(data, function(roomId, players){
-        io.to(roomId).emit("playerJoined", {
+        io.to(rooms[rooms.length-1].id).emit("playerJoined", {
           "id": players[players.length-1].id,
           "username": players[players.length-1].username,
           "players": players,
@@ -112,21 +113,21 @@ io.sockets.on("connection", function(socket) {
     socket.on("startGame", function(data) {
         rooms[rooms.length-1].resetGame();
         rooms[rooms.length-1].saveStartingPlayer(data.uid);
-        io.to(roomId).emit("clearAtout");
+        io.to(rooms[rooms.length-1].id).emit("clearAtout");
         rooms[rooms.length-1].dealCards(function(players){
           tempPlayers = players;
         });
         card = rooms[rooms.length-1].showOneCard();
-        io.to(roomId).emit("showCard", card);
-        io.to(roomId).emit("cardsDealt", tempPlayers);
-        io.to(roomId).emit("selectAtout", data.uid);
+        io.to(rooms[rooms.length-1].id).emit("showCard", card);
+        io.to(rooms[rooms.length-1].id).emit("cardsDealt", tempPlayers);
+        io.to(rooms[rooms.length-1].id).emit("selectAtout", data.uid);
     });
 
     socket.on("playerLeft", function(data){
       //game.playerLeft(data);
       //socket.broadcast.emit("removePlayer", data);
       rooms[rooms.length-1].playerLeft(data);
-      io.to(roomId).emit("removePlayer", data);
+      io.to(rooms[rooms.length-1].id).emit("removePlayer", data);
     });
 
     socket.on("setAtout", function(data) {
@@ -147,20 +148,15 @@ io.sockets.on("connection", function(socket) {
 
                     passedCount = 0;
                     if (i == rooms[rooms.length-1].players.length-1){
-                      io.to(roomId).emit("selectAtout", rooms[rooms.length-1].players[0].id);
-                      //io.to(roomId).broadcast.emit("selectAtout", rooms[rooms.length-1].players[0].id);
+                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[0].id);
                     }else{
-                    io.to(roomId).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
-                    //io.to(roomId).broadcast.emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
+                    io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
                     }
                   }else{
                     if (i == rooms[rooms.length-1].players.length-1){
-                      io.to(roomId).emit("selectAtout", rooms[rooms.length-1].players[0].id);
-                      //io.to(roomId).broadcast.emit("selectAtout", rooms[rooms.length-1].players[0].id);
+                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[0].id);
                     }else{
-                      io.to(roomId).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
-                      //io.to(roomId).broadcast.emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
-
+                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
                     }
                   }
                 }
@@ -168,17 +164,17 @@ io.sockets.on("connection", function(socket) {
         } else {
 
             rooms[rooms.length-1].setAtout(data.atout);
-            io.to(roomId).emit("atoutSelected", data.atout);
+            io.to(rooms[rooms.length-1].id).emit("atoutSelected", data.atout);
             //io.to(roomId).broadcast.emit("atoutSelected", data.atout);
-            io.to(roomId).emit("clearWageCard", data);
+            io.to(rooms[rooms.length-1].id).emit("clearWageCard", data);
             rooms[rooms.length-1].distributeWageCard(data.id);
             //rooms[rooms.length-1].dealCards();
             rooms[rooms.length-1].dealCards(function(players){
               tempPlayers = players;
             });
             //io.to(roomId).broadcast.emit("cardsDealt", tempPlayers);
-            io.to(roomId).emit("cardsDealt", tempPlayers);
-            io.to(roomId).emit("waitingPlayers", rooms[rooms.length-1].getStartingPlayerId());
+            io.to(rooms[rooms.length-1].id).emit("cardsDealt", tempPlayers);
+            io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].getStartingPlayerId());
         }
     });
 
@@ -186,26 +182,21 @@ io.sockets.on("connection", function(socket) {
 
       rooms[rooms.length-1].cardPlayed(data);
 
-      io.to(roomId).emit("displayCard", data);
-    //  io.to(roomId).broadcast.emit("displayCard", data);
+      io.to(rooms[rooms.length-1].id).emit("displayCard", data);
 
-    //  if (game.cardOnTable.length != game.players.length){
     if (rooms[rooms.length-1].getCardOnTable().length != rooms[rooms.length-1].players.length){
         for (var i = 0; i < rooms[rooms.length-1].players.length; i++) {
 
             if (rooms[rooms.length-1].players[i].id == data.id) {
               if (i == rooms[rooms.length-1].players.length-1){
-                //io.to(roomId).broadcast.emit("waitingPlayers", rooms[rooms.length-1].players[0].id );
-                io.to(roomId).emit("waitingPlayers", rooms[rooms.length-1].players[0].id );
+                io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].players[0].id );
               }else{
-              //io.to(roomId).broadcast.emit("waitingPlayers", rooms[rooms.length-1].players[i+1].id );
-              io.to(roomId).emit("waitingPlayers", rooms[rooms.length-1].players[i+1].id );
+              io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].players[i+1].id );
               }
             }
         }
       }
 
-      //if (game.cardOnTable.length == game.players.length){
       if (rooms[rooms.length-1].getCardOnTable().length == rooms[rooms.length-1].players.length){
       //find round winner
         var winnerPlayer = rooms[rooms.length-1].compareCards();
@@ -214,11 +205,7 @@ io.sockets.on("connection", function(socket) {
       //calculate team points for round
         var roundPoints = rooms[rooms.length-1].updateScore(winnerPlayer);
 
-
-        console.log("ROUND COUNT FOR WINNER AFTER UPDATE");
-        console.log(roundCount);
-
-        io.to(roomId).emit("roundResult", {
+        io.to(rooms[rooms.length-1].id).emit("roundResult", {
             "winnerID": winnerPlayer.id,
             "score": roundPoints,
             "teamMateID": winnerTeamMate.id
@@ -231,16 +218,15 @@ io.sockets.on("connection", function(socket) {
           roundCount = rooms[rooms.length-1].updateRoundScore(winnerPlayer);
           winnerReference = rooms[rooms.length-1].getWinnerRoundScore(winnerPlayer);
 
-          io.to(roomId).emit("roundCountUpdate", {
+          io.to(rooms[rooms.length-1].id).emit("roundCountUpdate", {
             "roundCount": roundCount,
             "winnerReference": winnerReference
           });
         }
 
-
         rooms[rooms.length-1].clearCardOnTable();
-        io.to(roomId).emit("clearBoard");
-        io.to(roomId).emit("waitingPlayers", winnerPlayer.id );
+        io.to(rooms[rooms.length-1].id).emit("clearBoard");
+        io.to(rooms[rooms.length-1].id).emit("waitingPlayers", winnerPlayer.id );
       }
     });
 });
