@@ -3,13 +3,12 @@ var fs = require('fs');
 var Game = require("./game");
 var Room = require("./room");
 var tempPlayers = [];
-var rooms;
+var rooms = [];
 var players = [];
 var team1 = 0;
 var team2 = 0;
 var passedCount = 0;
 var card;
-//var roomId;
 
 //typical express port
 const PORT = 8080;
@@ -47,191 +46,185 @@ app.get("/ping", function(request, response) {
 //app.listen(PORT);
 console.log('Running on http://localhost:' + PORT);
 
-function emitAtOut(message) {
-    //socket.emit('')....
-}
-
-function emitToRoom(id, eventToEmit) {
-  io.to(id).emit("");
-}
-
-//emit fires an event and sending to client (in swift file)
-//io.sockets.on listening
-// Player.uid, Player.sid
 io.sockets.on("connection", function(socket) {
     console.log("Connection was made!");
 
+    socket.emit("allRooms", rooms);
 
-    //socket.client.emit('', function() {})
-    //if rooms.players < 4 add player else push new room and all player
-    // if (...) { rooms[rooms.length - 1].addNewPlayer(); }
-    // else { var newID = randomString(12);  rooms.push(new Room(newID); )}
-    //handle room
-    // rooms.push({
-    //     id: "room1",
-    //     players: 0
-    // });
-    if (!rooms){
-        var room = new Room("room1");
-        rooms = [room];
+    socket.on("createRoom", function(data) {
+
         //roomId = "room1";
-        room.id = "room1";
-    }else{
-      //skip
-    }
+        var tempID = randomString(12);
+        var room = new Room(tempID);
+        room.name = data.name;
+        //rooms = [room];
+        rooms.push(room);
+        room.id = tempID;
+        socket.emit("allRooms", rooms);
+    });
 
-//add player to the last room that was created
-    socket.join(rooms[rooms.length-1].id);
+
     socket.on("addNewPlayer", function(data) {
-      console.log("NEW PLAYER");
-      console.log(data);
-      //select correct room
-      rooms[rooms.length-1].addNewPlayer(data, function(roomId, players){
-        io.to(rooms[rooms.length-1].id).emit("playerJoined", {
-          "id": players[players.length-1].id,
-          "username": players[players.length-1].username,
-          "players": players,
-          "roomId": roomId
-        });
-      });
+        //select correct room
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                if (rooms[x].players.length < 4) {
+                    //room has under 4 players
+                    socket.join(rooms[x].id);
+                    rooms[x].addNewPlayer(data, function(roomId, players) {
+                        io.to(rooms[x].id).emit("playerJoined", {
+                            "id": players[players.length - 1].id,
+                            "username": players[players.length - 1].username,
+                            "players": players,
+                            "roomId": roomId
+                        });
+                    });
+                } else {
+                    //room is full
+                }
+            }
+        }
     });
 
-    //no need?
-    socket.on("updatePlayers", function(data){
-      for(var i =0; i< rooms[rooms.length-1].players.length-1; i++){
-        socket.emit("playerJoined", {"id":rooms[rooms.length-1].players[i].id, "username":rooms[rooms.length-1].players[i].username});
-      }
-    });
-
-    socket.on("nudge", function(data){
-      //io.to(roomId).emit("nudge", data);
-      let tempNum = rooms[rooms.length-1].getNumFromId(data.uid);
-      data.num = tempNum;
-      socket.broadcast.emit("nudge", data);
+    socket.on("nudge", function(data) {
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                let tempNum = rooms[x].getNumFromId(data.uid);
+                data.num = tempNum;
+                socket.broadcast.emit("nudge", data);
+            }
+        }
     });
 
     socket.on("startGame", function(data) {
-        rooms[rooms.length-1].resetGame();
-        rooms[rooms.length-1].saveStartingPlayer(data.uid);
-        io.to(rooms[rooms.length-1].id).emit("clearAtout");
-        rooms[rooms.length-1].dealCards(function(players){
-          tempPlayers = players;
-        });
-        card = rooms[rooms.length-1].showOneCard();
-        io.to(rooms[rooms.length-1].id).emit("showCard", card);
-        io.to(rooms[rooms.length-1].id).emit("cardsDealt", tempPlayers);
-        io.to(rooms[rooms.length-1].id).emit("selectAtout", data.uid);
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                rooms[x].resetGame();
+                rooms[x].saveStartingPlayer(data.uid);
+                io.to(rooms[x].id).emit("clearAtout");
+                rooms[x].dealCards(function(players) {
+                    tempPlayers = players;
+                });
+                card = rooms[x].showOneCard();
+                io.to(rooms[x].id).emit("showCard", card);
+                io.to(rooms[x].id).emit("cardsDealt", tempPlayers);
+                io.to(rooms[x].id).emit("selectAtout", data.uid);
+            }
+        }
     });
 
-    socket.on("playerLeft", function(data){
-      //game.playerLeft(data);
-      //socket.broadcast.emit("removePlayer", data);
-      rooms[rooms.length-1].playerLeft(data);
-      io.to(rooms[rooms.length-1].id).emit("removePlayer", data);
+    socket.on("playerLeft", function(data) {
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                rooms[x].playerLeft(data);
+                io.to(rooms[x].id).emit("removePlayer", data);
+            }
+        }
+    });
+
+    socket.on("refreshTableView", function(data){
+      socket.emit("allRooms", rooms);
     });
 
     socket.on("setAtout", function(data) {
-        if (data.atout == "pass") {
-            passedCount = passedCount + 1;
-            // find the correct room
-            // call some appropriate function
-            // pass a callback function to the room
-            // in this case, roomMethod(data, emitAtOut);
-            // the room method: someMethod(data, callback) { ... callback(message); }
-
-            for (var i = 0; i < rooms[rooms.length-1].players.length; i++) {
-                if (rooms[rooms.length-1].players[i].id == data.uid) {
-                  //all the players passed once
-                  if (passedCount == rooms[rooms.length-1].players.length){
-                    //handle reset
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                if (data.atout == "pass") {
+                    passedCount = passedCount + 1;
+                    for (var i = 0; i < rooms[x].players.length; i++) {
+                        if (rooms[x].players[i].id == data.uid) {
+                            //all the players passed once
+                            if (passedCount == rooms[x].players.length) {
+                                passedCount = 0;
+                                if (i == rooms[x].players.length - 1) {
+                                    io.to(rooms[x].id).emit("selectAtout", rooms[x].players[0].id);
+                                } else {
+                                    io.to(rooms[x].id).emit("selectAtout", rooms[x].players[i + 1].id);
+                                }
+                            } else {
+                                if (i == rooms[x].players.length - 1) {
+                                    io.to(rooms[x].id).emit("selectAtout", rooms[x].players[0].id);
+                                } else {
+                                    io.to(rooms[x].id).emit("selectAtout", rooms[x].players[i + 1].id);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    rooms[x].setAtout(data.atout);
+                    io.to(rooms[x].id).emit("atoutSelected", data.atout);
+                    //io.to(roomId).broadcast.emit("atoutSelected", data.atout);
+                    io.to(rooms[x].id).emit("clearWageCard", data);
+                    rooms[x].distributeWageCard(data.id);
+                    //rooms[rooms.length-1].dealCards();
+                    rooms[x].dealCards(function(players) {
+                        tempPlayers = players;
+                    });
                     //io.to(roomId).broadcast.emit("cardsDealt", tempPlayers);
-
-                    passedCount = 0;
-                    if (i == rooms[rooms.length-1].players.length-1){
-                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[0].id);
-                    }else{
-                    io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
-                    }
-                  }else{
-                    if (i == rooms[rooms.length-1].players.length-1){
-                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[0].id);
-                    }else{
-                      io.to(rooms[rooms.length-1].id).emit("selectAtout", rooms[rooms.length-1].players[i + 1].id);
-                    }
-                  }
+                    io.to(rooms[x].id).emit("cardsDealt", tempPlayers);
+                    io.to(rooms[x].id).emit("waitingPlayers", rooms[rooms.length - 1].getStartingPlayerId());
                 }
             }
-        } else {
-
-            rooms[rooms.length-1].setAtout(data.atout);
-            io.to(rooms[rooms.length-1].id).emit("atoutSelected", data.atout);
-            //io.to(roomId).broadcast.emit("atoutSelected", data.atout);
-            io.to(rooms[rooms.length-1].id).emit("clearWageCard", data);
-            rooms[rooms.length-1].distributeWageCard(data.id);
-            //rooms[rooms.length-1].dealCards();
-            rooms[rooms.length-1].dealCards(function(players){
-              tempPlayers = players;
-            });
-            //io.to(roomId).broadcast.emit("cardsDealt", tempPlayers);
-            io.to(rooms[rooms.length-1].id).emit("cardsDealt", tempPlayers);
-            io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].getStartingPlayerId());
         }
     });
 
     socket.on("cardPlayed", function(data) {
+        for (var x = 0; x < rooms.length; x++) {
+            if (rooms[x].id == data.roomID) {
+                rooms[x].cardPlayed(data);
 
-      rooms[rooms.length-1].cardPlayed(data);
+                io.to(rooms[x].id).emit("displayCard", data);
 
-      io.to(rooms[rooms.length-1].id).emit("displayCard", data);
+                if (rooms[x].getCardOnTable().length != rooms[x].players.length) {
+                    for (var i = 0; i < rooms[x].players.length; i++) {
 
-    if (rooms[rooms.length-1].getCardOnTable().length != rooms[rooms.length-1].players.length){
-        for (var i = 0; i < rooms[rooms.length-1].players.length; i++) {
+                        if (rooms[x].players[i].id == data.id) {
+                            if (i == rooms[x].players.length - 1) {
+                                io.to(rooms[x].id).emit("waitingPlayers", rooms[x].players[0].id);
+                            } else {
+                                io.to(rooms[x].id).emit("waitingPlayers", rooms[x].players[i + 1].id);
+                            }
+                        }
+                    }
+                }
 
-            if (rooms[rooms.length-1].players[i].id == data.id) {
-              if (i == rooms[rooms.length-1].players.length-1){
-                io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].players[0].id );
-              }else{
-              io.to(rooms[rooms.length-1].id).emit("waitingPlayers", rooms[rooms.length-1].players[i+1].id );
-              }
+                if (rooms[x].getCardOnTable().length == rooms[x].players.length) {
+                    //find round winner
+                    var winnerPlayer = rooms[x].compareCards();
+                    var winnerTeamMate = rooms[x].getTeamMate(winnerPlayer);
+
+                    //calculate team points for round
+                    var roundPoints = rooms[x].updateScore(winnerPlayer);
+
+                    io.to(rooms[x].id).emit("roundResult", {
+                        "winnerID": winnerPlayer.id,
+                        "score": roundPoints,
+                        "teamMateID": winnerTeamMate.id
+                    });
+
+                    var roundCount = 0;
+                    var winnerReference = "";
+
+                    if (data.lastCard == 1) {
+                        roundCount = rooms[x].updateRoundScore(winnerPlayer);
+                        winnerReference = rooms[x].getWinnerRoundScore(winnerPlayer);
+
+                        io.to(rooms[x].id).emit("roundCountUpdate", {
+                            "roundCount": roundCount,
+                            "winnerReference": winnerReference
+                        });
+                    }
+
+                    rooms[x].clearCardOnTable();
+                    io.to(rooms[x].id).emit("clearBoard");
+                    io.to(rooms[x].id).emit("waitingPlayers", winnerPlayer.id);
+                }
             }
         }
-      }
-
-      if (rooms[rooms.length-1].getCardOnTable().length == rooms[rooms.length-1].players.length){
-      //find round winner
-        var winnerPlayer = rooms[rooms.length-1].compareCards();
-        var winnerTeamMate = rooms[rooms.length-1].getTeamMate(winnerPlayer);
-
-      //calculate team points for round
-        var roundPoints = rooms[rooms.length-1].updateScore(winnerPlayer);
-
-        io.to(rooms[rooms.length-1].id).emit("roundResult", {
-            "winnerID": winnerPlayer.id,
-            "score": roundPoints,
-            "teamMateID": winnerTeamMate.id
-        });
-
-        var roundCount = 0;
-        var winnerReference = "";
-
-        if (data.lastCard == 1){
-          roundCount = rooms[rooms.length-1].updateRoundScore(winnerPlayer);
-          winnerReference = rooms[rooms.length-1].getWinnerRoundScore(winnerPlayer);
-
-          io.to(rooms[rooms.length-1].id).emit("roundCountUpdate", {
-            "roundCount": roundCount,
-            "winnerReference": winnerReference
-          });
-        }
-
-        rooms[rooms.length-1].clearCardOnTable();
-        io.to(rooms[rooms.length-1].id).emit("clearBoard");
-        io.to(rooms[rooms.length-1].id).emit("waitingPlayers", winnerPlayer.id );
-      }
     });
 });
 
-// can use this in conjunction with some createNewRoom() method, add it to room as an id
+// create room id
 function randomString(length) {
     let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     let result = '';
