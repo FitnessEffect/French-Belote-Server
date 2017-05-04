@@ -96,6 +96,15 @@ io.sockets.on("connection", function(socket) {
         }
     });
 
+    socket.on("removeRoom", function(data){
+      for (var x = 0; x < rooms.length; x++) {
+          if (rooms[x].id == data.roomID) {
+            rooms = rooms.splice(x, 1);
+            socket.emit("allRooms", rooms);
+          }
+      }
+    });
+
     socket.on("startGame", function(data) {
         for (var x = 0; x < rooms.length; x++) {
             if (rooms[x].id == data.roomID) {
