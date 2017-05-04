@@ -30,7 +30,7 @@ class Room {
         var context = this;
         for (var i = 0; i < context.players.length; i++) {
             if (context.players[i].id == data.uid) {
-                context.players.splice(i, 1);
+                context.players = context.players.splice(i, 1);
             }
         }
     }
