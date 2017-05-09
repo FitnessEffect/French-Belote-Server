@@ -109,7 +109,7 @@ io.sockets.on("connection", function(socket) {
         for (var x = 0; x < rooms.length; x++) {
             if (rooms[x].id == data.roomID) {
                 rooms[x].resetGame();
-                rooms[x].saveStartingPlayer(data.uid);
+                rooms[x].saveStartingPlayerId(data.uid);
                 io.to(rooms[x].id).emit("clearAtout");
                 rooms[x].dealCards(function(players) {
                     tempPlayers = players;
@@ -121,6 +121,7 @@ io.sockets.on("connection", function(socket) {
             }
         }
     });
+
 
     socket.on("playerLeft", function(data) {
         for (var x = 0; x < rooms.length; x++) {
@@ -222,6 +223,10 @@ io.sockets.on("connection", function(socket) {
                             "roundCount": roundCount,
                             "winnerReference": winnerReference
                         });
+
+                        // var followingPlayerId = rooms[x].getFollowingStartingPlayerId();
+                        // io.to(rooms[x].id).emit("followingStartPlayerId", followingPlayerId);
+
                     }
 
                     rooms[x].clearCardOnTable();
