@@ -88,13 +88,29 @@ class Room {
         }
     }
 
-    saveStartingPlayer(id) {
-        this.game.startingPlayer = id;
+    saveStartingPlayerId(id) {
+        this.game.startingPlayerId = id;
     }
 
     getStartingPlayerId() {
-        return this.game.startingPlayer;
+        return this.game.startingPlayerId;
     }
+
+    //
+    // getFollowingStartingPlayerId() {
+    //   console.log("IN HERE");
+    //   let tempP = this.game.startingPlayer.id;
+    //   for (var i = 0; i < this.players.length; i++){
+    //     if (this.players[i].id == tempP){
+    //       if (i == 3){
+    //         return this.players[0].id;
+    //       }else{
+    //         return this.players[i+1].id;
+    //     }
+    //     }
+    //   }
+    //     return this.game.startingPlayer.id;
+    // }
 
     getTeamMate(winnerPlayer, callback) {
         if (this.players.length == 4) {
