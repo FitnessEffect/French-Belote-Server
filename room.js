@@ -28,9 +28,13 @@ class Room {
 
     playerLeft(data) {
         var context = this;
+        console.log("IN PLAYER LEFT BEFORE SPLICE");
+        console.log(context.players);
         for (var i = 0; i < context.players.length; i++) {
             if (context.players[i].id == data.uid) {
-                context.players = context.players.splice(i, 1);
+                context.players.splice(i, 1);
+                console.log("IN PLAYER LEFT AFTER SPLICE");
+                console.log(context.players);
             }
         }
     }
