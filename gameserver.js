@@ -124,6 +124,7 @@ io.sockets.on("connection", function(socket) {
 
 
     socket.on("playerLeft", function(data) {
+
         for (var x = 0; x < rooms.length; x++) {
             if (rooms[x].id == data.roomID) {
                 rooms[x].playerLeft(data);
