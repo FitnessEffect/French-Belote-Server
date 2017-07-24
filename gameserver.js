@@ -10,6 +10,7 @@ var team2 = 0;
 var passedCount = 0;
 var card;
 
+
 //typical express port
 const PORT = 8080;
 
@@ -19,13 +20,15 @@ var bodyParser = require('body-parser');
 
 const serveStatic = require('serve-static');
 
+//instantiate express
 const app = express();
-var server = require("http").createServer(app).listen(PORT);
-var io = require("socket.io").listen(server);
 
-app.use(serveStatic('dist', {
-    'index': ['index.html']
-}));
+// var server = require("http").createServer(app).listen(PORT);
+// var io = require("socket.io").listen(server);
+
+// app.use(serveStatic('dist', {
+//     'index': ['index.html']
+// }));
 
 app.post("/start", function(request, response, next) {
     const player1 = request.body.name;
@@ -43,6 +46,11 @@ app.get("/ping", function(request, response) {
     response.send("GET response from ping");
 });
 
+//io needs to be instantiated
+// var server = require("http").createServer(app).listen(PORT);
+var server =  app.listen(PORT);
+var io = require("socket.io").listen(server);
+console.log(io);
 //app.listen(PORT);
 console.log('Running on http://localhost:' + PORT);
 
