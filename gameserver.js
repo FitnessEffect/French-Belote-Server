@@ -12,7 +12,7 @@ var card;
 
 
 //typical express port
-const PORT = 8080;
+const PORT = 3000;
 
 const express = require('express');
 
@@ -69,6 +69,7 @@ io.sockets.on("connection", function(socket) {
         rooms.push(room);
         room.id = tempID;
         socket.emit("allRooms", rooms);
+
     });
 
 
@@ -106,8 +107,14 @@ io.sockets.on("connection", function(socket) {
 
     socket.on("removeRoom", function(data){
       for (var x = 0; x < rooms.length; x++) {
+        console.log("ROOMS");
+        console.log(rooms.length);
+        console.log("DATA");
+        console.log(data);
           if (rooms[x].id == data.roomID) {
-            rooms = rooms.splice(x, 1);
+
+            rooms.splice(x, 1);
+            console.log(rooms);
             socket.emit("allRooms", rooms);
           }
       }
